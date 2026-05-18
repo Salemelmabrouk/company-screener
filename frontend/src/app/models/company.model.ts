@@ -1,11 +1,18 @@
-export interface Company {
+export interface CompanySummary {
   id: number;
   name: string;
   sector: string;
   country: string;
-  description: string;
   foundedYear: number;
   employeeCount: number;
+}
+
+export interface CompanyListItem extends CompanySummary {
+  descriptionPreview: string;
+}
+
+export interface Company extends CompanySummary {
+  description: string;
 }
 
 export interface AiQuestionRequest {
@@ -22,4 +29,6 @@ export interface PageResponse<T> {
   totalElements: number;
   number: number;
   size: number;
+  first: boolean;
+  last: boolean;
 }

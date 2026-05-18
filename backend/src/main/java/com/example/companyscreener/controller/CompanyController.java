@@ -3,6 +3,8 @@ package com.example.companyscreener.controller;
 import com.example.companyscreener.dto.AiAnswerResponse;
 import com.example.companyscreener.dto.AiQuestionRequest;
 import com.example.companyscreener.dto.CompanyDto;
+import com.example.companyscreener.dto.CompanyListItemDto;
+import com.example.companyscreener.dto.PagedResponse;
 import com.example.companyscreener.entity.Company;
 import com.example.companyscreener.service.AiService;
 import com.example.companyscreener.service.CompanyService;
@@ -11,7 +13,6 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,13 +32,21 @@ public class CompanyController {
      * All query params are optional.
      */
     @GetMapping
-    public ResponseEntity<Page<CompanyDto>> getAllCompanies(
+    public ResponseEntity<PagedResponse<CompanyListItemDto>> getAllCompanies(
             @RequestParam(defaultValue = "0")   @Min(0)              int    page,
             @RequestParam(defaultValue = "10")  @Min(1) @Max(100)    int    size,
             @RequestParam(required = false)                           String search,
             @RequestParam(required = false)                           String sector
     ) {
         return ResponseEntity.ok(companyService.getAllCompanies(page, size, search, sector));
+    }
+
+    /**
+     * GET /api/companies/sectors
+     */
+    @GetMapping("/sectors")
+    public ResponseEntity<java.util.List<String>> getSectors() {
+        return ResponseEntity.ok(companyService.getSectors());
     }
 
     /**

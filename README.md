@@ -65,12 +65,10 @@ the **Groq API**.
 | Variable       | Description                       | Default        |
 |----------------|-----------------------------------|----------------|
 | `GROQ_API_KEY` | Groq API key (**required**)       | —              |
-| `DB_HOST`      | PostgreSQL hostname               | `localhost`    |
-| `DB_PORT`      | PostgreSQL port                   | `5432`         |
-| `DB_NAME`      | Database name                     | `companyscreener` |
-| `DB_USER`      | Database user                     | `postgres`     |
-| `DB_PASSWORD`  | Database password                 | `postgres`     |
-| `CORS_ORIGINS` | Allowed frontend origin(s)        | `http://localhost:4200` |
+| `DATABASE_URL` | PostgreSQL JDBC URL               | `jdbc:postgresql://localhost:5432/companyscreener` |
+| `DATABASE_USERNAME` | Database user                | `postgres`     |
+| `DATABASE_PASSWORD` | Database password            | `postgres`     |
+| `CORS_ALLOWED_ORIGINS` | Allowed frontend origin(s) | `http://localhost:4200` |
 
 ---
 
@@ -104,7 +102,7 @@ psql -U postgres -c "CREATE DATABASE companyscreener;"
 
 # Set environment variables
 export GROQ_API_KEY=gsk_your_key_here
-export DB_PASSWORD=postgres
+export DATABASE_PASSWORD=postgres
 
 # Run the Spring Boot app
 cd backend
@@ -128,6 +126,7 @@ npm start
 | Method | Endpoint                     | Description                          |
 |--------|------------------------------|--------------------------------------|
 | GET    | `/api/companies`             | List all companies                   |
+| GET    | `/api/companies/sectors`     | List distinct company sectors        |
 | GET    | `/api/companies/{id}`        | Get company by ID                    |
 | POST   | `/api/companies/{id}/ask`    | Ask AI a question about a company    |
 

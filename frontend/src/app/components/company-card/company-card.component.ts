@@ -1,17 +1,18 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule, SlicePipe } from '@angular/common';
-import { Company } from '../../models/company.model';
+import { ChangeDetectionStrategy, Component, Input, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { CompanyListItem } from '../../models/company.model';
 
 @Component({
   selector: 'app-company-card',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './company-card.component.html',
-  styleUrls: ['./company-card.component.scss']
+  styleUrls: ['./company-card.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CompanyCardComponent {
-  @Input({ required: true }) company!: Company;
-  @Output() cardClick = new EventEmitter<Company>();
+  @Input({ required: true }) company!: CompanyListItem;
+  @Output() cardClick = new EventEmitter<CompanyListItem>();
 
   readonly sectorColors: Record<string, string> = {
     'FinTech': '#6366f1',

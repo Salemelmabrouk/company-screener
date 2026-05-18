@@ -181,6 +181,35 @@
   gap: 1.25rem;
 }
 
+.results-shell {
+  position: relative;
+}
+
+.page-loading-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -0.75rem;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 40%;
+    background: var(--accent);
+    animation: pageProgress 0.8s ease-in-out infinite;
+  }
+}
+
+.page-loading .companies-grid {
+  opacity: 0.72;
+  pointer-events: none;
+}
+
 .loading-state, .error-state, .empty-state {
   text-align: center;
   padding: 4rem 2rem;
@@ -212,6 +241,7 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes pageProgress { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
 
 
 .pagination {

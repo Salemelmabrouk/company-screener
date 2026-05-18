@@ -1,0 +1,143 @@
+<div class="list-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-text">
+      <h1 class="page-title">Company Screener</h1>
+      <p class="page-subtitle">
+        Explore companies and ask AI-powered questions
+      </p>
+    </div>
+    @if (!isLoading()) {
+      <div class="stats-bar">
+        <span class="stat"
+          ><strong>{{ companies().length }}</strong> companies</span
+        >
+        <span class="stat-divider">·</span>
+        <span class="stat"
+          ><strong>{{ sectors().length - 1 }}</strong> sectors</span
+        >
+      </div>
+    }
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-row">
+    <div class="search-box">
+      <span class="search-icon">⌕</span>
+      <input
+        type="text"
+        placeholder="Search by name, sector, or country…"
+        class="search-input"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)"
+      />
+      @if (searchQuery()) {
+        <button class="clear-btn" (click)="searchQuery.set('')">×</button>
+      }
+    </div>
+    <select
+      class="sector-select"
+      [value]="selectedSector()"
+      (change)="selectedSector.set($any($event.target).value)"
+    >
+      <option value="">All Sectors</option>
+      @for (s of sectors().slice(1); track s) {
+        <option [value]="s">{{ s }}</option>
+      }
+    </select>
+    @if (hasActiveFilters) {
+      <button class="reset-btn" (click)="clearFilters()">Clear filters</button>
+    }
+  </div>
+
+  <!-- Sector Pills -->
+  @if (!isLoading() && companies().length > 0) {
+    <div class="sector-pills">
+      @for (item of sectorCounts(); track item.sector) {
+        <button
+          class="sector-pill"
+          [class.active]="selectedSector() === item.sector"
+          (click)="
+            selectedSector.set(
+              selectedSector() === item.sector ? '' : item.sector
+            )
+          "
+        >
+          {{ item.sector }} <span class="pill-count">{{ item.count }}</span>
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading companies…</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (error()) {
+    <div class="error-state">
+      <span class="error-icon">⚠</span>
+      <p>{{ error() }}</p>
+      <button class="retry-btn" (click)="loadCompanies()">Retry</button>
+    </div>
+  }
+
+  <!-- Empty -->
+  @if (
+    !isLoading() &&
+    !error() &&
+    filteredCompanies().length === 0 &&
+    companies().length > 0
+  ) {
+    <div class="empty-state">
+      <p>No companies match your filters.</p>
+      <button class="reset-btn" (click)="clearFilters()">Clear filters</button>
+    </div>
+  }
+
+  <!-- Grid -->
+  @if (!isLoading() && !error() && filteredCompanies().length > 0) {
+    <div class="companies-grid">
+      @for (company of filteredCompanies(); track company.id) {
+        <app-company-card
+          [company]="company"
+          (cardClick)="onCompanyClick($event)"
+        />
+      }
+    </div>
+  }
+
+  <!-- Pagination -->
+  @if (!isLoading() && !error() && totalPages() > 1) {
+    <div class="pagination">
+      <button
+        class="page-btn"
+        [disabled]="page() === 0"
+        (click)="changePage(page() - 1)"
+      >
+        ‹
+      </button>
+
+    @for (p of getPages(); track p) {
+  <button
+    class="page-btn"
+    [class.active]="page() === p"
+    (click)="changePage(p)">
+    {{ p + 1 }}
+  </button>
+}
+
+      <button
+        class="page-btn"
+        [disabled]="page() === totalPages() - 1"
+        (click)="changePage(page() + 1)"
+      >
+        ›
+      </button>
+    </div>
+  }
+</div>

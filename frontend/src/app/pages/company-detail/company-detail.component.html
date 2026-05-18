@@ -1,0 +1,136 @@
+<div class="detail-page">
+
+  <!-- Back button -->
+  <button class="back-btn" (click)="goBack()">
+    ← Back to companies
+  </button>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading company…</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (error()) {
+    <div class="error-state">
+      <p>{{ error() }}</p>
+      <button class="retry-btn" (click)="goBack()">Go back</button>
+    </div>
+  }
+
+  <!-- Detail content -->
+  @if (!isLoading() && company()) {
+    <div class="detail-content" [class.loaded]="!isLoading()">
+
+      <!-- Hero card -->
+      <div class="hero-card">
+        <div class="hero-left">
+          <div class="company-avatar-lg"
+            [style.background]="sectorColor + '20'"
+            [style.color]="sectorColor">
+          {{ companyInitials }}
+          </div>
+          <div>
+            <h1 class="company-name">{{ company()!.name }}</h1>
+            <div class="meta-row">
+              <span class="sector-badge" [style.background]="sectorColor + '1a'" [style.color]="sectorColor">
+                {{ company()!.sector }}
+              </span>
+              <span class="country-badge">🌍 {{ company()!.country }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-val">{{ company()!.foundedYear }}</span>
+            <span class="stat-lbl">Founded</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-val">{{ formatEmployees(company()!.employeeCount) }}</span>
+            <span class="stat-lbl">Employees</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="description-card">
+        <h2 class="section-title">About</h2>
+        <p class="description-text">{{ company()!.description }}</p>
+      </div>
+
+      <!-- AI Chat Section -->
+      <div class="ai-section">
+        <div class="ai-section-header">
+          <div class="ai-icon">◈</div>
+          <div>
+            <h2 class="section-title">Ask AI about {{ company()!.name }}</h2>
+            <p class="section-subtitle">Powered by Llama 3.3 via Groq</p>
+          </div>
+        </div>
+
+        <!-- Suggested questions -->
+        <div class="suggested-questions">
+          @for (sq of suggestedQuestions; track sq) {
+            <button class="suggestion-btn" (click)="question.set(sq)">
+              {{ sq }}
+            </button>
+          }
+        </div>
+
+        <!-- Input -->
+        <div class="question-input-row">
+          <input
+            type="text"
+            class="question-input"
+            placeholder="Ask anything about this company…"
+            [value]="question()"
+            (input)="question.set($any($event.target).value)"
+            (keydown.enter)="askQuestion()"
+          />
+          <button
+            class="ask-btn"
+            (click)="askQuestion()"
+            [disabled]="!question().trim() || isAiLoading()"
+          >
+            @if (isAiLoading()) {
+              <span class="btn-spinner"></span>
+            } @else {
+              Ask
+            }
+          </button>
+        </div>
+
+        <!-- AI Answer -->
+        @if (isAiLoading()) {
+          <div class="ai-loading">
+            <div class="dots-loader">
+              <span></span><span></span><span></span>
+            </div>
+            <p>Generating answer…</p>
+          </div>
+        }
+
+        @if (aiAnswer() && !isAiLoading()) {
+          <div class="ai-answer">
+            <div class="answer-header">
+              <span class="answer-badge">AI Response</span>
+              <span class="answer-model">llama-3.3-70b</span>
+            </div>
+            <p class="answer-text">{{ aiAnswer() }}</p>
+          </div>
+        }
+
+        @if (aiError()) {
+          <div class="ai-error">
+            <span>⚠</span> {{ aiError() }}
+          </div>
+        }
+      </div>
+
+    </div>
+  }
+
+</div>

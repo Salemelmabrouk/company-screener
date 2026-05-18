@@ -1,0 +1,158 @@
+/* Import distinctive fonts */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+/* =====================
+   Dark Theme (default)
+   ===================== */
+:root,
+[data-theme="dark"] {
+  --bg-primary:    #0d0f14;
+  --bg-secondary:  #13161d;
+  --surface:       #181c24;
+  --surface-hover: #1e2330;
+  --border:        rgba(255, 255, 255, 0.07);
+  --border-hover:  rgba(255, 255, 255, 0.14);
+
+  --text-primary:   #f0f2f8;
+  --text-secondary: #8b93ab;
+  --text-muted:     #5a6070;
+
+  --accent:       #6366f1;
+  --accent-light: #818cf8;
+  --accent-dark:  #4f46e5;
+
+  --shadow-sm: 0 1px 3px  rgba(0,0,0,0.30);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.35);
+
+  /* Scrollbar */
+  --scrollbar-track: #0d0f14;
+  --scrollbar-thumb: rgba(255,255,255,0.12);
+}
+
+/* =====================
+   Light Theme
+   ===================== */
+[data-theme="light"] {
+  --bg-primary:    #f5f6fa;
+  --bg-secondary:  #eef0f6;
+  --surface:       #ffffff;
+  --surface-hover: #f0f2f9;
+  --border:        rgba(0, 0, 0, 0.08);
+  --border-hover:  rgba(0, 0, 0, 0.16);
+
+  --text-primary:   #0f1117;
+  --text-secondary: #4a5270;
+  --text-muted:     #9099b3;
+
+  --accent:       #4f46e5;
+  --accent-light: #6366f1;
+  --accent-dark:  #3730a3;
+
+  --shadow-sm: 0 1px 3px  rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.10);
+
+  /* Scrollbar */
+  --scrollbar-track: #f5f6fa;
+  --scrollbar-thumb: rgba(0,0,0,0.15);
+}
+
+/* =====================
+   Typography tokens
+   (theme-independent)
+   ===================== */
+:root {
+  --font-display: 'Syne', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+}
+
+/* =====================
+   Theme transition
+   ===================== */
+*, *::before, *::after {
+  transition:
+    background-color 0.25s ease,
+    border-color     0.25s ease,
+    color            0.15s ease,
+    box-shadow       0.25s ease;
+  box-sizing: border-box;
+  margin:  0;
+  padding: 0;
+}
+
+/* Don't animate layout properties */
+*:not([class*="spinner"]):not([class*="dots"]):not([class*="spinner"]) {
+  transition-property:
+    background-color, border-color, color, box-shadow, opacity, transform;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* =====================
+   Selection
+   ===================== */
+::selection {
+  background: rgba(99, 102, 241, 0.25);
+  color: var(--text-primary);
+}
+
+/* =====================
+   Scrollbar
+   ===================== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+  &:hover { background: var(--text-muted); }
+}
+
+/* =====================
+   Focus
+   ===================== */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* =====================
+   Animations
+   (kept out of transition scope)
+   ===================== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30%            { transform: translateY(-6px); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* =====================
+   View Transitions
+   ===================== */
+@view-transition {
+  navigation: auto;
+}

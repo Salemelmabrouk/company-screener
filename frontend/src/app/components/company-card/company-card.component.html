@@ -1,0 +1,34 @@
+<div class="company-card" (click)="cardClick.emit(company)" role="button" tabindex="0"
+  (keydown.enter)="cardClick.emit(company)">
+
+  <div class="card-header">
+    <div class="company-avatar" [style.background]="sectorColor + '20'" [style.color]="sectorColor">
+      {{ initials }}
+    </div>
+    <div class="company-meta">
+      <h3 class="company-name">{{ company.name }}</h3>
+      <span class="company-country">{{ company.country }}</span>
+    </div>
+  </div>
+
+  <div class="sector-tag" [style.background]="sectorColor + '18'" [style.color]="sectorColor">
+    {{ company.sector }}
+  </div>
+
+<p class="company-desc">
+  {{ company.description | slice:0:120 }}…
+</p>
+
+  <div class="card-footer">
+    <div class="stat">
+      <span class="stat-value">{{ company.foundedYear }}</span>
+      <span class="stat-label">Founded</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <span class="stat-value">{{ formatEmployeeCount(company.employeeCount) }}</span>
+      <span class="stat-label">Employees</span>
+    </div>
+    <div class="ask-hint">Ask AI →</div>
+  </div>
+</div>

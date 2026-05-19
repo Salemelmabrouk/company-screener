@@ -17,10 +17,18 @@ export interface Company extends CompanySummary {
 
 export interface AiQuestionRequest {
   question: string;
+  history?: Array<{ role: string; content: string }>;
 }
 
 export interface AiAnswerResponse {
   answer: string;
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'error';
+  text: string;
+  timestamp: Date;
+  suggestions?: string[];
 }
 
 export interface PageResponse<T> {

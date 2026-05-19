@@ -68,7 +68,7 @@ public class CompanyController {
     ) {
         log.info("AI question for company {}: {}", id, request.getQuestion());
         Company company = companyService.getCompanyEntityById(id);
-        String answer = aiService.askAboutCompany(company, request.getQuestion());
+        String answer = aiService.askAboutCompany(company, request.getQuestion(), request.getHistory());
         return ResponseEntity.ok(new AiAnswerResponse(answer));
     }
 }

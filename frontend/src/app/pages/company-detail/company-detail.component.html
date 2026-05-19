@@ -34,7 +34,14 @@
           {{ companyInitials }}
           </div>
           <div>
-            <h1 class="company-name">{{ company()!.name }}</h1>
+            <div class="name-watch-row">
+              <h1 class="company-name">{{ company()!.name }}</h1>
+              <button class="watch-btn" [class.watched]="isWatched()" (click)="toggleWatchlist()" [title]="isWatched() ? 'Remove from Watchlist' : 'Add to Watchlist'">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="bookmark-icon">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </button>
+            </div>
             <div class="meta-row">
               <span class="sector-badge" [style.background]="sectorColor + '1a'" [style.color]="sectorColor">
                 {{ company()!.sector }}
@@ -61,6 +68,49 @@
         <p class="description-text">{{ company()!.description }}</p>
       </div>
 
+      <!-- Growth Chart Card (Bonus) -->
+      <div class="chart-card">
+        <h2 class="section-title">Simulated Employee Growth</h2>
+        <div class="chart-container">
+          <svg viewBox="0 0 500 150" class="growth-chart">
+            <defs>
+              <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" [attr.stop-color]="sectorColor" stop-opacity="0.25" />
+                <stop offset="100%" [attr.stop-color]="sectorColor" stop-opacity="0.0" />
+              </linearGradient>
+            </defs>
+
+            <!-- Grid lines -->
+            <line x1="20" y1="20" x2="480" y2="20" stroke="var(--border)" stroke-dasharray="4,4" opacity="0.5" />
+            <line x1="20" y1="65" x2="480" y2="65" stroke="var(--border)" stroke-dasharray="4,4" opacity="0.5" />
+            <line x1="20" y1="110" x2="480" y2="110" stroke="var(--border)" stroke-dasharray="4,4" opacity="0.5" />
+            <line x1="20" y1="130" x2="480" y2="130" stroke="var(--border)" opacity="0.5" />
+
+            <!-- Area under curve (gradient fill) -->
+            <path [attr.d]="chartData().path + ' L 480 130 L 20 130 Z'" fill="url(#chartGradient)" />
+
+            <!-- The curve -->
+            <path [attr.d]="chartData().path" fill="none" [attr.stroke]="sectorColor" stroke-width="4" stroke-linecap="round" />
+
+            <!-- Points -->
+            @for (pt of chartData().points; track pt.year) {
+              <!-- Glowing outer circle on hover handled by CSS -->
+              <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="6" [attr.fill]="sectorColor" class="chart-point" />
+              <!-- Tooltip/Label on hover -->
+              <text [attr.x]="pt.x" [attr.y]="pt.y - 12" text-anchor="middle" class="chart-label" [attr.fill]="sectorColor">
+                {{ formatEmployees(pt.val) }}
+              </text>
+            }
+          </svg>
+          
+          <div class="chart-x-axis">
+            @for (year of chartData().years; track year) {
+              <span class="x-label">{{ year }}</span>
+            }
+          </div>
+        </div>
+      </div>
+
       <!-- AI Chat Section -->
       <div class="ai-section">
         <div class="ai-section-header">
@@ -69,18 +119,96 @@
             <h2 class="section-title">Ask AI about {{ company()!.name }}</h2>
             <p class="section-subtitle">Powered by Llama 3.3 via Groq</p>
           </div>
-        </div>
-
-        <!-- Suggested questions -->
-        <div class="suggested-questions">
-          @for (sq of suggestedQuestions; track sq) {
-            <button class="suggestion-btn" (click)="question.set(sq)">
-              {{ sq }}
+          @if (chatHistory().length > 0) {
+            <button class="clear-chat-btn" (click)="clearChat()" title="Clear conversation">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6l-1 14H6L5 6"></path>
+                <path d="M10 11v6M14 11v6"></path>
+              </svg>
+              Clear chat
             </button>
           }
         </div>
 
-        <!-- Input -->
+        <!-- Suggested questions — only when chat is empty -->
+        @if (chatHistory().length === 0) {
+          <div class="suggested-questions">
+            @for (sq of suggestedQuestions; track sq) {
+              <button class="suggestion-btn" (click)="setQuestion(sq)">
+                {{ sq }}
+              </button>
+            }
+          </div>
+        }
+
+        <!-- Chat thread -->
+        @if (chatHistory().length > 0) {
+          <div class="chat-body" #chatBody>
+            @for (msg of chatHistory(); track msg.timestamp) {
+
+              <!-- User bubble -->
+              @if (msg.role === 'user') {
+                <div class="chat-row chat-row--user">
+                  <div class="chat-bubble chat-bubble--user">
+                    <p class="bubble-text">{{ msg.text }}</p>
+                  </div>
+                  <div class="avatar avatar--user">You</div>
+                </div>
+              }
+
+              <!-- Assistant bubble -->
+              @if (msg.role === 'assistant') {
+                <div class="chat-row chat-row--assistant">
+                  <div class="avatar avatar--ai">◈</div>
+                  <div class="assistant-block">
+                    <div class="chat-bubble chat-bubble--assistant">
+                      <span class="bubble-model">llama-3.3-70b</span>
+                      <p class="bubble-text">{{ msg.text }}</p>
+                    </div>
+                    @if (msg.suggestions && msg.suggestions.length > 0 && !isAiLoading() && $last) {
+                      <div class="followup-block">
+                        <span class="followup-label">If you want, I can also:</span>
+                        <div class="followup-chips">
+                          @for (s of msg.suggestions; track s; let i = $index) {
+                            <button class="followup-chip" (click)="sendSuggestion(s)">
+                              {{ i === msg.suggestions!.length - 1 ? 'or ' : '' }}{{ s }}
+                            </button>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Error bubble -->
+              @if (msg.role === 'error') {
+                <div class="chat-row chat-row--assistant">
+                  <div class="avatar avatar--ai">◈</div>
+                  <div class="chat-bubble chat-bubble--error">
+                    <p class="bubble-text">⚠ {{ msg.text }}</p>
+                  </div>
+                </div>
+              }
+
+            }
+
+            <!-- Typing indicator while loading -->
+            @if (isAiLoading()) {
+              <div class="chat-row chat-row--assistant">
+                <div class="avatar avatar--ai">◈</div>
+                <div class="chat-bubble chat-bubble--assistant chat-bubble--typing">
+                  <div class="dots-loader">
+                    <span></span><span></span><span></span>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Input row -->
         <div class="question-input-row">
           <input
             type="text"
@@ -98,36 +226,13 @@
             @if (isAiLoading()) {
               <span class="btn-spinner"></span>
             } @else {
-              Ask
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
             }
           </button>
         </div>
-
-        <!-- AI Answer -->
-        @if (isAiLoading()) {
-          <div class="ai-loading">
-            <div class="dots-loader">
-              <span></span><span></span><span></span>
-            </div>
-            <p>Generating answer…</p>
-          </div>
-        }
-
-        @if (aiAnswer() && !isAiLoading()) {
-          <div class="ai-answer">
-            <div class="answer-header">
-              <span class="answer-badge">AI Response</span>
-              <span class="answer-model">llama-3.3-70b</span>
-            </div>
-            <p class="answer-text">{{ aiAnswer() }}</p>
-          </div>
-        }
-
-        @if (aiError()) {
-          <div class="ai-error">
-            <span>⚠</span> {{ aiError() }}
-          </div>
-        }
       </div>
 
     </div>

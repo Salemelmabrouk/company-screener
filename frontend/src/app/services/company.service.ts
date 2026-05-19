@@ -8,6 +8,7 @@ import {
   AiQuestionRequest,
   AiAnswerResponse,
   PageResponse,
+  ChatMessage
 } from "../models/company.model";
 import { environment } from "../../environments/environment";
 
@@ -58,8 +59,24 @@ export class CompanyService {
   askQuestion(
     companyId: number,
     question: string,
+    history?: ChatMessage[]
   ): Observable<AiAnswerResponse> {
-    const body: AiQuestionRequest = { question };
+    // Map ChatMessage[] to backend DTO format (role, content)
+    // Filter out errors and suggestions
+    const mappedHistory = history
+      ? history
+          .filter((m) => m.role !== 'error')
+          .map((m) => ({
+            role: m.role,
+            content: m.text,
+          }))
+      : [];
+
+    const body: AiQuestionRequest = {
+      question,
+      history: mappedHistory,
+    };
+
     return this.http.post<AiAnswerResponse>(
       `${this.apiUrl}/${companyId}/ask`,
       body,

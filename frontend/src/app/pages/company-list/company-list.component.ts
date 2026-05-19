@@ -57,6 +57,20 @@ export class CompanyListComponent implements OnInit {
   isLoading = signal(true);
   isPageLoading = signal(false);
   error = signal<string | null>(null);
+  
+  // Watchlist
+  watchlist = signal<number[]>([]);
+  showWatchlistOnly = signal(false);
+
+  // Computed signal for filtered companies (watchlist filter applied on top of server results)
+  displayedCompanies = computed(() => {
+    const list = this.companies();
+    if (this.showWatchlistOnly()) {
+      const wl = this.watchlist();
+      return list.filter(c => wl.includes(c.id));
+    }
+    return list;
+  });
 
   page = signal(0);
   size = signal(12);
@@ -83,6 +97,7 @@ export class CompanyListComponent implements OnInit {
     this.loadSectors();
     this.bindCompanyLoads();
     this.requestLoad(false);
+    this.watchlist.set(this.getWatchlist());
   }
 
   loadCompanies(): void {
@@ -265,6 +280,38 @@ export class CompanyListComponent implements OnInit {
     const oldestKey = this.pageCache.keys().next().value;
     if (oldestKey) {
       this.pageCache.delete(oldestKey);
+    }
+  }
+
+  // ── Watchlist helpers ──────────────────────────────────────────────────────
+  toggleWatchlist(id: number): void {
+    const wl = this.getWatchlist();
+    const index = wl.indexOf(id);
+    
+    if (index === -1) {
+      wl.push(id);
+    } else {
+      wl.splice(index, 1);
+    }
+    
+    localStorage.setItem('screener_watchlist', JSON.stringify(wl));
+    this.watchlist.set(wl);
+  }
+
+  toggleWatchlistFilter(): void {
+    this.showWatchlistOnly.update(v => !v);
+  }
+
+  isWatched(id: number): boolean {
+    return this.watchlist().includes(id);
+  }
+
+  private getWatchlist(): number[] {
+    try {
+      const raw = localStorage.getItem('screener_watchlist');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
     }
   }
 }

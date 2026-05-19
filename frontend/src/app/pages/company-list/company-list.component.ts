@@ -14,6 +14,7 @@ import { Subject, of, timer } from 'rxjs';
 import { catchError, debounce, map, switchMap, tap } from 'rxjs/operators';
 import { CompanyCardComponent } from '../../components/company-card/company-card.component';
 import { CompanyService } from '../../services/company.service';
+import { WatchlistService } from '../../services/watchlist.service';
 import { CompanyListItem, PageResponse, SectorCount } from '../../models/company.model';
 
 interface CompanyQuery {
@@ -37,6 +38,7 @@ type LoadResult =
 })
 export class CompanyListComponent implements OnInit {
   private readonly companyService = inject(CompanyService);
+  private readonly watchlistService = inject(WatchlistService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
@@ -70,7 +72,7 @@ export class CompanyListComponent implements OnInit {
   });
 
   // ── Watchlist ────────────────────────────────────────────────────────────
-  watchlist         = signal<number[]>([]);
+  watchlist         = this.watchlistService.watchlist;
   showWatchlistOnly = signal(false);
   watchlistItems    = signal<CompanyListItem[]>([]);
   watchlistLoading  = signal(false);
@@ -98,7 +100,6 @@ export class CompanyListComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.watchlist.set(this.loadWatchlistIds());
     this.loadSectors();
 
     // Restore state from URL query parameters
@@ -176,16 +177,13 @@ export class CompanyListComponent implements OnInit {
 
   // ── Watchlist ─────────────────────────────────────────────────────────────
   toggleWatchlist(id: number): void {
-    const ids = [...this.watchlist()];
-    const idx = ids.indexOf(id);
-    if (idx === -1) ids.push(id); else ids.splice(idx, 1);
-    this.watchlist.set(ids);
-    this.persistWatchlist(ids);
+    const wasWatched = this.isWatched(id);
+    this.watchlistService.toggleWatchlist(id);
 
     // Refresh watchlist items if the filter is active
     if (this.showWatchlistOnly()) {
       this.watchlistItems.update(items =>
-        idx === -1
+        !wasWatched
           ? [...items, ...this.companies().filter(c => c.id === id)]
           : items.filter(c => c.id !== id)
       );
@@ -313,13 +311,5 @@ export class CompanyListComponent implements OnInit {
       const oldest = this.pageCache.keys().next().value;
       if (oldest) this.pageCache.delete(oldest);
     }
-  }
-
-  private loadWatchlistIds(): number[] {
-    try { return JSON.parse(localStorage.getItem('screener_watchlist') ?? '[]'); } catch { return []; }
-  }
-
-  private persistWatchlist(ids: number[]): void {
-    try { localStorage.setItem('screener_watchlist', JSON.stringify(ids)); } catch {}
   }
 }

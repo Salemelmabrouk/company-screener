@@ -2,6 +2,8 @@
 
 A full-stack prototype that lets you browse companies, filter by sector, and ask AI-powered questions about any company — answered live by **Llama 3.3-70b** via the **Groq API**.
 
+⭐ **If you find this project helpful or interesting, please consider giving it a star!** ⭐
+
 ---
 
 ## What Works (Core & Bonus Requirements)

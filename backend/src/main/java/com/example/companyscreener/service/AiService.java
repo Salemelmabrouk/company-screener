@@ -14,7 +14,9 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import com.example.companyscreener.dto.GroqRequest;
+import com.example.companyscreener.dto.GroqMessage;
+import com.example.companyscreener.dto.GroqResponse;
 
 @Slf4j
 @Service
@@ -71,13 +73,10 @@ public class AiService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(groqApiKey);
 
-        List<Map<String, String>> messages = new ArrayList<>();
+        List<GroqMessage> messages = new ArrayList<>();
 
         // System message sets the AI's role with company context
-        messages.add(Map.of(
-            "role", "system",
-            "content", buildSystemPrompt(company)
-        ));
+        messages.add(new GroqMessage("system", buildSystemPrompt(company)));
 
         // Add conversation history (trimmed to prevent token overflow)
         if (history != null && !history.isEmpty()) {
@@ -85,25 +84,25 @@ public class AiService {
             for (int i = start; i < history.size(); i++) {
                 ChatMessageDto msg = history.get(i);
                 if ("user".equals(msg.role()) || "assistant".equals(msg.role())) {
-                    messages.add(Map.of("role", msg.role(), "content", msg.content()));
+                    messages.add(new GroqMessage(msg.role(), msg.content()));
                 }
             }
         }
 
         // Add current user question
-        messages.add(Map.of("role", "user", "content", userQuestion));
+        messages.add(new GroqMessage("user", userQuestion));
 
-        Map<String, Object> requestBody = Map.of(
-            "model", groqModel,
-            "messages", messages,
-            "max_tokens", 400,
-            "temperature", 0.7
+        GroqRequest requestBody = new GroqRequest(
+            groqModel,
+            messages,
+            400,
+            0.7
         );
 
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+        HttpEntity<GroqRequest> request = new HttpEntity<>(requestBody, headers);
 
-        ResponseEntity<Map> response = restTemplate.exchange(
-            groqApiUrl, HttpMethod.POST, request, Map.class
+        ResponseEntity<GroqResponse> response = restTemplate.exchange(
+            groqApiUrl, HttpMethod.POST, request, GroqResponse.class
         );
 
         return extractContent(response.getBody());
@@ -132,19 +131,14 @@ public class AiService {
         );
     }
 
-    @SuppressWarnings("unchecked")
-    private String extractContent(Map<?, ?> responseBody) {
-        if (responseBody == null) {
-            throw new RuntimeException("Empty response from Groq API");
+    private String extractContent(GroqResponse responseBody) {
+        if (responseBody == null || responseBody.choices() == null || responseBody.choices().isEmpty()) {
+            throw new RuntimeException("Empty or invalid response from Groq API");
         }
-        List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
-        if (choices == null || choices.isEmpty()) {
-            throw new RuntimeException("No choices in Groq API response");
+        GroqMessage message = responseBody.choices().get(0).message();
+        if (message == null || message.content() == null) {
+            throw new RuntimeException("No message content in Groq API response");
         }
-        Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-        if (message == null) {
-            throw new RuntimeException("No message in Groq API response");
-        }
-        return (String) message.get("content");
+        return message.content();
     }
 }

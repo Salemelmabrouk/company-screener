@@ -3,7 +3,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CompanyService } from '../../services/company.service';
 import { Company, ChatMessage } from '../../models/company.model';
-
+import { WatchlistService } from '../../services/watchlist.service';
+import { ChatStorageService } from '../../services/chat-storage.service';
+import { AiFollowUpService } from '../../services/ai-follow-up.service';
+import { CompanyBrandUtil } from '../../utils/company-brand.util';
 @Component({
   selector: 'app-company-detail',
   standalone: true,
@@ -16,6 +19,9 @@ export class CompanyDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly companyService = inject(CompanyService);
+  private readonly watchlistService = inject(WatchlistService);
+  private readonly chatStorage = inject(ChatStorageService);
+  private readonly aiFollowUp = inject(AiFollowUpService);
   private readonly destroyRef = inject(DestroyRef);
 
   private companyId = 0;
@@ -25,7 +31,7 @@ export class CompanyDetailComponent implements OnInit {
     effect(() => {
       const history = this.chatHistory();
       if (this.companyId) {
-        this.saveChatHistory(this.companyId, history);
+        this.chatStorage.saveHistory(this.companyId, history);
       }
     });
   }
@@ -34,21 +40,13 @@ export class CompanyDetailComponent implements OnInit {
   company = signal<Company | null>(null);
   isLoading = signal(true);
   error = signal<string | null>(null);
-  isWatched = signal(false);
   useFallbackLogo = signal(false);
 
-  readonly companyDomains: Record<string, string> = {
-    'Stripe': 'stripe.com', 'Spotify': 'spotify.com', 'Tesla': 'tesla.com',
-    'Airbnb': 'airbnb.com', 'Shopify': 'shopify.com', 'OpenAI': 'openai.com',
-    'Klarna': 'klarna.com', 'Canva': 'canva.com', 'Google': 'google.com',
-    'Microsoft': 'microsoft.com', 'Apple': 'apple.com', 'Amazon': 'amazon.com',
-    'Meta': 'meta.com', 'PayPal': 'paypal.com', 'Revolut': 'revolut.com',
-    'Salesforce': 'salesforce.com', 'Notion': 'notion.so', 'Atlassian': 'atlassian.com',
-    'Nvidia': 'nvidia.com', 'Palantir': 'palantir.com', 'Databricks': 'databricks.com',
-    'SAP': 'sap.com', 'Figma': 'figma.com', 'Discord': 'discord.com',
-    'GitHub': 'github.com', 'LinkedIn': 'linkedin.com', 'Uber': 'uber.com',
-    'Bolt': 'bolt.eu', 'Booking.com': 'booking.com', 'Snowflake': 'snowflake.com'
-  };
+  // Watchlist state derived globally from the WatchlistService
+  isWatched = computed(() => {
+    const id = this.companyId;
+    return id ? this.watchlistService.isWatched(id)() : false;
+  });
 
   // Computed signal for simulated growth chart
   chartData = computed(() => {
@@ -116,77 +114,9 @@ export class CompanyDetailComponent implements OnInit {
 
   @ViewChild('chatBody') private chatBodyRef?: ElementRef<HTMLDivElement>;
 
-  readonly sectorColors: Record<string, string> = {
-    'FinTech': '#6366f1',
-    'Media & Entertainment': '#ec4899',
-    'Automotive & Energy': '#f59e0b',
-    'Travel & Hospitality': '#10b981',
-    'E-Commerce': '#3b82f6',
-    'Artificial Intelligence': '#8b5cf6',
-    'Design & SaaS': '#06b6d4',
-  };
-
-  readonly suggestedQuestions = [
-    'What does this company do?',
-    'Who are the main competitors?',
-    'What is the business model?',
-    'What are the growth prospects?'
-  ];
-
-  // Follow-up suggestion pools keyed by topic keyword
-  private readonly followUpPools: Record<string, string[]> = {
-    business_model: [
-      'Who are the main competitors?',
-      'What are the key revenue streams?',
-      'What are the growth prospects?',
-      'What risks does this company face?',
-      'How does it compare to its rivals?'
-    ],
-    competitors: [
-      'What is the business model?',
-      'What is the market size for this sector?',
-      'What is the competitive advantage?',
-      'What are the growth prospects?',
-      'Is this company profitable?'
-    ],
-    growth: [
-      'What risks could limit that growth?',
-      'How is the company funded?',
-      'Who are the main competitors?',
-      'What new markets is it targeting?',
-      'What does this company do?'
-    ],
-    risks: [
-      'How does it plan to mitigate those risks?',
-      'What are the growth prospects?',
-      'Who are the main investors?',
-      'What is the business model?',
-      'Is this company profitable?'
-    ],
-    funding: [
-      'Is this company profitable?',
-      'What is the valuation?',
-      'Who are the main competitors?',
-      'What are the growth prospects?',
-      'What is the business model?'
-    ],
-    leadership: [
-      'What is the company culture like?',
-      'What are the growth prospects?',
-      'How is the company funded?',
-      'What is the business model?',
-      'Who are the main competitors?'
-    ],
-    default: [
-      'What is the business model?',
-      'Who are the main competitors?',
-      'What are the growth prospects?',
-      'What risks does this company face?',
-      'How is the company funded?',
-      'Is this company profitable?',
-      'What is the company culture like?'
-    ]
-  };
+  get suggestedQuestions(): string[] {
+    return this.aiFollowUp.defaultSuggestions;
+  }
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -196,42 +126,18 @@ export class CompanyDetailComponent implements OnInit {
     }
     this.companyId = id;
     // Restore chat immediately — visible before the company API returns
-    this.chatHistory.set(this.loadChatHistory(id));
-    this.isWatched.set(this.isInWatchlist(id));
+    this.chatHistory.set(this.chatStorage.loadHistory(id));
     this.loadCompany(id);
   }
 
   get logoUrl(): string {
     const c = this.company();
-    if (!c) return '';
-    const domain = this.companyDomains[c.name];
-    if (domain) {
-      return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
-    }
-    return `https://www.google.com/s2/favicons?domain=${c.name.toLowerCase().replace(/ /g, '')}.com&sz=128`;
+    return c ? CompanyBrandUtil.getLogoUrl(c.name) : '';
   }
 
   get iconType(): string {
     const c = this.company();
-    if (!c) return 'building';
-    
-    const name = c.name.toLowerCase();
-    const sector = c.sector;
-
-    if (name.includes('snowflake')) return 'snowflake';
-    if (name.includes('stripe') || name.includes('paypal') || name.includes('revolut') || name.includes('klarna')) return 'credit-card';
-    if (name.includes('discord')) return 'message-square';
-    if (name.includes('spotify')) return 'music';
-    if (name.includes('amazon') || name.includes('shopify')) return 'shopping-bag';
-    
-    // Fallback by sector
-    if (sector === 'FinTech') return 'credit-card';
-    if (sector === 'Technology' || sector === 'Artificial Intelligence' || sector === 'Semiconductors') return 'cpu';
-    if (sector === 'Communication') return 'message-square';
-    if (sector === 'E-Commerce' || sector === 'E-Commerce & Cloud') return 'shopping-bag';
-    if (sector === 'Design & SaaS' || sector === 'Design Software' || sector === 'Productivity') return 'layers';
-    
-    return 'building'; // Ultimate fallback
+    return c ? CompanyBrandUtil.getIconType(c.name, c.sector) : 'building';
   }
 
   loadCompany(id: number): void {
@@ -275,7 +181,7 @@ askQuestion(): void {
     .pipe(takeUntilDestroyed(this.destroyRef))
     .subscribe({
       next: (res) => {
-        const followUps = this.generateFollowUps(q);
+        const followUps = this.aiFollowUp.generateFollowUps(q, currentHistory);
         this.chatHistory.update(history => [
           ...history,
           { role: 'assistant', text: res.answer, timestamp: new Date(), suggestions: followUps }
@@ -302,7 +208,7 @@ askQuestion(): void {
     this.chatHistory.set([]);
     this.aiError.set(null);
     if (this.companyId) {
-      localStorage.removeItem(this.chatStorageKey(this.companyId));
+      this.chatStorage.clearHistory(this.companyId);
     }
   }
 
@@ -315,30 +221,7 @@ askQuestion(): void {
     this.askQuestion();
   }
 
-  private generateFollowUps(askedQuestion: string): string[] {
-    const q = askedQuestion.toLowerCase();
 
-    let pool: string[];
-    if (q.includes('business model') || q.includes('revenue') || q.includes('monetize') || q.includes('make money')) {
-      pool = this.followUpPools['business_model'];
-    } else if (q.includes('compet') || q.includes('rival') || q.includes('alternative')) {
-      pool = this.followUpPools['competitors'];
-    } else if (q.includes('growth') || q.includes('future') || q.includes('prospect') || q.includes('expand')) {
-      pool = this.followUpPools['growth'];
-    } else if (q.includes('risk') || q.includes('challenge') || q.includes('problem') || q.includes('threat')) {
-      pool = this.followUpPools['risks'];
-    } else if (q.includes('fund') || q.includes('invest') || q.includes('valuat') || q.includes('ipo')) {
-      pool = this.followUpPools['funding'];
-    } else if (q.includes('ceo') || q.includes('founder') || q.includes('leader') || q.includes('team') || q.includes('culture')) {
-      pool = this.followUpPools['leadership'];
-    } else {
-      pool = this.followUpPools['default'];
-    }
-
-    // Remove the question just asked from the pool, then pick 3
-    const filtered = pool.filter(s => s.toLowerCase() !== askedQuestion.toLowerCase());
-    return filtered.slice(0, 3);
-  }
 
   private scrollChatToBottom(): void {
     setTimeout(() => {
@@ -350,7 +233,8 @@ askQuestion(): void {
   }
 
   get sectorColor(): string {
-    return this.sectorColors[this.company()?.sector ?? ''] ?? '#6b7280';
+    const c = this.company();
+    return c ? CompanyBrandUtil.getSectorColor(c.sector) : '#6b7280';
   }
 
   formatEmployees(count: number): string {
@@ -360,61 +244,8 @@ askQuestion(): void {
 
   // ── Watchlist helpers ──────────────────────────────────────────────────────
   toggleWatchlist(): void {
-    if (!this.companyId) return;
-    
-    const watchlist = this.getWatchlist();
-    const index = watchlist.indexOf(this.companyId);
-    
-    if (index === -1) {
-      watchlist.push(this.companyId);
-      this.isWatched.set(true);
-    } else {
-      watchlist.splice(index, 1);
-      this.isWatched.set(false);
-    }
-    
-    localStorage.setItem('screener_watchlist', JSON.stringify(watchlist));
-  }
-
-  private getWatchlist(): number[] {
-    try {
-      const raw = localStorage.getItem('screener_watchlist');
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  }
-
-  private isInWatchlist(id: number): boolean {
-    return this.getWatchlist().includes(id);
-  }
-
-  // ── localStorage helpers ────────────────────────────────────────────────────
-  private chatStorageKey(id: number): string {
-    return `screener_chat_${id}`;
-  }
-
-  private saveChatHistory(id: number, history: ChatMessage[]): void {
-    try {
-      localStorage.setItem(this.chatStorageKey(id), JSON.stringify(history));
-    } catch {
-      // localStorage may be unavailable (private browsing quota exceeded etc.)
-    }
-  }
-
-  private loadChatHistory(id: number): ChatMessage[] {
-    try {
-      const raw = localStorage.getItem(this.chatStorageKey(id));
-      if (!raw) return [];
-      const parsed: Array<{ role: string; text: string; timestamp: string; suggestions?: string[] }> = JSON.parse(raw);
-      return parsed.map(m => ({
-        role: m.role as ChatMessage['role'],
-        text: m.text,
-        timestamp: new Date(m.timestamp),  // ISO string → Date
-        suggestions: m.suggestions
-      }));
-    } catch {
-      return [];
+    if (this.companyId) {
+      this.watchlistService.toggleWatchlist(this.companyId);
     }
   }
 }

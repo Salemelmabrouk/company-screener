@@ -40,3 +40,8 @@ export interface PageResponse<T> {
   first: boolean;
   last: boolean;
 }
+
+export interface SectorCount {
+  sector: string;
+  count: number;
+}

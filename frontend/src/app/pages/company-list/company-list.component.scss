@@ -27,6 +27,12 @@
   margin: 0;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .stats-bar {
   display: flex;
   align-items: center;
@@ -34,16 +40,90 @@
   font-size: 0.875rem;
   color: var(--text-secondary);
 
-  strong {
-    color: var(--accent);
-    font-weight: 700;
-  }
-
-  .stat-divider {
-    opacity: 0.4;
-  }
+  strong { color: var(--accent); font-weight: 700; }
+  .stat-divider { opacity: 0.4; }
 }
 
+.chart-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.875rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover { border-color: var(--accent); color: var(--accent); }
+  &.active { background: var(--accent); border-color: var(--accent); color: white; }
+}
+
+/* ── Sector Distribution Chart ── */
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.5rem;
+  animation: slideIn 0.2s ease;
+}
+
+.chart-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 2.5rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bar-label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bar-track {
+  height: 8px;
+  background: var(--bg-secondary);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 2px;
+}
+
+.bar-count {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Filters ── */
 .filters-row {
   display: flex;
   gap: 0.75rem;
@@ -79,11 +159,7 @@
     transition: border-color 0.2s, box-shadow 0.2s;
 
     &::placeholder { color: var(--text-muted); }
-
-    &:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-    }
+    &:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
   }
 
   .clear-btn {
@@ -98,7 +174,6 @@
     cursor: pointer;
     padding: 0.2rem;
     line-height: 1;
-
     &:hover { color: var(--text-primary); }
   }
 }
@@ -113,7 +188,6 @@
   outline: none;
   cursor: pointer;
   transition: border-color 0.2s;
-
   &:focus { border-color: var(--accent); }
 }
 
@@ -126,11 +200,7 @@
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
-
-  &:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
+  &:hover { border-color: var(--accent); color: var(--accent); }
 }
 
 .watchlist-filter-btn {
@@ -141,43 +211,38 @@
   color: var(--text-secondary);
   font-size: 0.85rem;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s;
   display: flex;
   align-items: center;
-  gap: 0.5rem; /* Better gap for icon + text */
+  gap: 0.5rem;
 
-  .btn-bookmark-icon {
-    width: 14px;
-    height: 14px;
-    color: var(--text-secondary);
-    transition: all 0.2s ease;
-  }
+  .btn-bookmark-icon { width: 14px; height: 14px; transition: all 0.2s; }
 
-  &:hover {
-    border-color: var(--accent);
-    color: var(--text-primary);
-    background: var(--bg-secondary);
-
-    .btn-bookmark-icon {
-      color: var(--accent);
-    }
-  }
-
-  &.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
-
-    .btn-bookmark-icon {
-      color: white;
-      fill: white; /* Filled bookmark when active */
-    }
+  &:hover { border-color: var(--accent); color: var(--text-primary); }
+  &.active { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600;
+    .btn-bookmark-icon { color: white; fill: white; }
   }
 }
 
+.wl-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
 
+.watchlist-filter-btn:not(.active) .wl-badge {
+  background: var(--accent);
+  color: white;
+}
+
+/* ── Sector pills ── */
 .sector-pills {
   display: flex;
   flex-wrap: wrap;
@@ -198,28 +263,11 @@
   cursor: pointer;
   transition: all 0.2s;
 
-  &:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  &.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-
-    .pill-count { background: rgba(255,255,255,0.25); color: white; }
-  }
-
-  .pill-count {
-    background: var(--bg-secondary);
-    border-radius: 999px;
-    padding: 0.1rem 0.4rem;
-    font-size: 0.7rem;
-    font-weight: 600;
-  }
+  &:hover { border-color: var(--accent); color: var(--accent); }
+  &.active { background: var(--accent); border-color: var(--accent); color: white; }
 }
 
+/* ── Card grid ── */
 .companies-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -228,10 +276,7 @@
 
 .card-wrapper {
   position: relative;
-  
-  &:hover .card-watch-btn {
-    opacity: 1;
-  }
+  &:hover .card-watch-btn { opacity: 1; }
 }
 
 .card-watch-btn {
@@ -239,61 +284,31 @@
   top: 1rem;
   right: 1rem;
   background: var(--surface);
-  border: 1px solid var(--border); /* Thin light border as in image */
+  border: 1px solid var(--border);
   border-radius: 50%;
-  width: 40px; /* Slightly larger for elegance */
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+  opacity: 0;
   z-index: 10;
 
-  .bookmark-icon {
-    width: 18px;
-    height: 18px;
-    color: var(--text-primary); /* Dark color as in image */
-    transition: all 0.2s ease;
-  }
+  .bookmark-icon { width: 16px; height: 16px; color: var(--text-primary); transition: all 0.2s; }
 
-  &:hover {
-    transform: scale(1.05);
-    border-color: var(--accent);
-    background: var(--bg-secondary);
-
-    .bookmark-icon {
-      color: var(--accent);
-      fill: rgba(99, 102, 241, 0.1); /* Subtle fill on hover */
-    }
-  }
-
-  &.watched {
-    border-color: var(--accent);
-    background: var(--accent);
-
-    .bookmark-icon {
-      color: white;
-      fill: white; /* Solid fill when active */
-    }
-  }
-
-  &:active {
-    transform: scale(0.95);
+  &:hover { border-color: var(--accent); .bookmark-icon { color: var(--accent); } }
+  &.watched { opacity: 1; background: var(--accent); border-color: var(--accent);
+    .bookmark-icon { color: white; fill: white; }
   }
 }
 
-
-.results-shell {
-  position: relative;
-}
+.results-shell { position: relative; }
 
 .page-loading-bar {
   position: absolute;
-  left: 0;
-  right: 0;
-  top: -0.75rem;
+  left: 0; right: 0; top: -0.75rem;
   height: 2px;
   overflow: hidden;
   border-radius: 999px;
@@ -309,11 +324,9 @@
   }
 }
 
-.page-loading .companies-grid {
-  opacity: 0.72;
-  pointer-events: none;
-}
+.page-loading .companies-grid { opacity: 0.72; pointer-events: none; }
 
+/* ── States ── */
 .loading-state, .error-state, .empty-state {
   text-align: center;
   padding: 4rem 2rem;
@@ -321,8 +334,7 @@
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
+  width: 40px; height: 40px;
   border: 3px solid var(--border);
   border-top-color: var(--accent);
   border-radius: 50%;
@@ -332,22 +344,11 @@
 
 .error-state {
   .error-icon { font-size: 2rem; display: block; margin-bottom: 0.5rem; color: #ef4444; }
-  .retry-btn {
-    margin-top: 1rem;
-    padding: 0.5rem 1.25rem;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-  }
+  .retry-btn { margin-top: 1rem; padding: 0.5rem 1.25rem; background: var(--accent);
+    color: white; border: none; border-radius: 8px; cursor: pointer; }
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-@keyframes pageProgress { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
-
-
+/* ── Pagination ── */
 .pagination {
   display: flex;
   justify-content: center;
@@ -359,8 +360,7 @@
 }
 
 .page-btn {
-  min-width: 38px;
-  height: 38px;
+  min-width: 38px; height: 38px;
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--surface);
@@ -368,26 +368,16 @@
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+
+  &:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+  &.active { background: var(--accent); border-color: var(--accent); color: white; box-shadow: 0 6px 16px rgba(99, 102, 241, 0.25); }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 
-.page-btn:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
-  transform: translateY(-1px);
-}
-
-.page-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
-  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.25);
-}
-
-.page-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+/* ── Animations ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes pageProgress { from { transform: translateX(-100%); } to { transform: translateX(250%); } }

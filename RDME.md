@@ -4,31 +4,30 @@ A full-stack prototype that lets you browse companies, filter by sector, and ask
 
 ---
 
-## What Works (Core & Bonus Requirements)
+## What Works
 
 - ✅ Spring Boot REST API (`/api/companies`, `/{id}`, `/{id}/ask`, `/sectors`)
 - ✅ PostgreSQL database with 30 seeded companies via Flyway migrations
 - ✅ Server-side pagination, search, and sector filtering
 - ✅ Angular 18 frontend with standalone components and Signals
-- ✅ URL Query Parameter synchronization for state retention across reloads
 - ✅ Company list with live search + sector filter pills
-- ✅ Company detail page with full profile, dynamic logos (Google Favicon API), and fallbacks
+- ✅ Company detail page with full profile
 - ✅ AI chat with full conversation history (ChatGPT-style thread)
 - ✅ Input cleared after each message; chat scrolls to the latest message
+- ✅ Suggested one-click questions shown when chat is empty
 - ✅ Loading indicator (animated dots) while AI responds
 - ✅ Error messages shown inline inside the chat thread
 - ✅ Docker Compose setup (backend + PostgreSQL + Angular/Nginx)
 - ✅ Angular production build passes (`npm run build:prod`)
-- ✅ **Bonus:** Watchlist feature with `localStorage` persistence
-- ✅ **Bonus:** Sector breakdown chart in the list view & Simulated employee growth chart in detail view
-- ✅ **Bonus:** Light / dark theme toggle
 
 ## What Is Not Implemented
 
 - ❌ User authentication (would add Spring Security + JWT)
 - ❌ Add / edit companies via a UI form
+- ❌ Watchlist with `localStorage`
+- ❌ Sector breakdown chart
 - ❌ Rate limiting on the AI endpoint
-- ❌ Backend unit/integration tests
+- ❌ Backend unit/integration tests (`mvn test` could not run — Maven not available in this environment)
 - ❌ Frontend `.spec.ts` tests
 
 ---
@@ -255,7 +254,6 @@ company-screener/
 | Choice | Reason |
 |--------|--------|
 | Angular Signals | Reactive state without NgRx; `ChangeDetectionStrategy.OnPush` on all components |
-| URL State Sync | State (pagination, filters) synced with query params to survive browser reloads |
 | `switchMap` + `debounce` | Cancels in-flight requests on rapid input; prevents stale-result overwrites |
 | Page cache (`Map<string, Page>`) | Instant navigation to cached pages; next-page prefetch after each load |
 | Chat history signal (`ChatMessage[]`) | Full conversation thread per company; mirrors ChatGPT/DeepSeek UX |
@@ -302,11 +300,9 @@ company-screener/
 
 ---
 
-## 🤖 AI Tools Used During Development
+## AI Tools Used
 
-- **ChatGPT & DeepSeek:** Used for brainstorming architectural decisions, querying specific Spring Boot API patterns, and debugging complex logic.
-- **Claude Desktop:** Used to generate specific component implementations and review frontend UI/UX logic.
-- **Antigravity (Advanced Agentic Assistant):** Used extensively as a pair-programmer to rapidly scaffold boilerplate, wire up the frontend to the backend, and implement bonus features dynamically within the IDE.
+- **Claude (Anthropic)** — assisted with architecture decisions, optimization review, and code generation throughout the project.
 
 ---
 
@@ -314,6 +310,9 @@ company-screener/
 
 - [ ] User authentication (Spring Security + JWT)
 - [ ] Add / edit companies via UI form
+- [ ] Watchlist with `localStorage` persistence
+- [ ] Sector breakdown pie chart (Chart.js)
+- [ ] Light / dark theme toggle
 - [ ] Pagination for very large datasets (cursor-based)
 - [ ] Rate limiting on the AI endpoint
 - [ ] Backend unit tests (JUnit 5 + Mockito)

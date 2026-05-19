@@ -1,54 +1,80 @@
 <div class="list-page">
+
+  <!-- ── Page header ── -->
   <div class="page-header">
     <div class="header-text">
       <h1 class="page-title">Company Screener</h1>
-      <p class="page-subtitle">
-        Explore companies and ask AI-powered questions
-      </p>
+      <p class="page-subtitle">Explore companies and ask AI-powered questions</p>
     </div>
     @if (!isLoading()) {
-      <div class="stats-bar">
-        <span class="stat">
-          <strong>{{ totalElements() }}</strong> companies
-        </span>
-        <span class="stat-divider">·</span>
-        <span class="stat">
-          <strong>{{ sectors().length }}</strong> sectors
-        </span>
+      <div class="header-actions">
+        <div class="stats-bar">
+          <span class="stat"><strong>{{ totalElements() }}</strong> companies</span>
+          <span class="stat-divider">·</span>
+          <span class="stat"><strong>{{ sectors().length }}</strong> sectors</span>
+        </div>
+        <!-- Chart toggle -->
+        <button class="chart-btn" type="button" (click)="toggleChart()"
+          [class.active]="showChart()" title="Sector distribution chart">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6"  y1="20" x2="6"  y2="14"></line>
+          </svg>
+          Chart
+        </button>
       </div>
     }
   </div>
 
+  <!-- ── Sector Distribution Chart ── -->
+  @if (showChart() && chartBars().length > 0) {
+    <div class="chart-card">
+      <h2 class="chart-title">Company Distribution by Sector</h2>
+      <div class="bar-chart">
+        @for (bar of chartBars(); track bar.sector) {
+          <div class="bar-row">
+            <span class="bar-label" [title]="bar.sector">{{ bar.sector }}</span>
+            <div class="bar-track">
+              <div class="bar-fill" [style.width.%]="bar.pct"></div>
+            </div>
+            <span class="bar-count">{{ bar.count }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ── Filters ── -->
   <div class="filters-row">
     <div class="search-box">
       <span class="search-icon">⌕</span>
-      <input
-        type="text"
-        placeholder="Search by name, sector, or country..."
+      <input type="text" placeholder="Search by name, sector, or country..."
         class="search-input"
         [value]="searchQuery()"
-        (input)="updateSearch($any($event.target).value)"
-      />
+        (input)="updateSearch($any($event.target).value)" />
       @if (searchQuery()) {
         <button class="clear-btn" type="button" (click)="updateSearch('')">×</button>
       }
     </div>
-    <select
-      class="sector-select"
-      [value]="selectedSector()"
-      (change)="selectSector($any($event.target).value)"
-    >
+
+    <select class="sector-select" [value]="selectedSector()"
+      (change)="selectSector($any($event.target).value)">
       <option value="">All Sectors</option>
       @for (s of sectors(); track s) {
         <option [value]="s">{{ s }}</option>
       }
     </select>
-    
-    <button class="watchlist-filter-btn" [class.active]="showWatchlistOnly()" type="button" (click)="toggleWatchlistFilter()">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-bookmark-icon">
+
+    <button class="watchlist-filter-btn" type="button"
+      [class.active]="showWatchlistOnly()" (click)="toggleWatchlistFilter()">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="btn-bookmark-icon">
         <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
       </svg>
-      Watchlist
+      Watchlist @if (watchlist().length > 0) { <span class="wl-badge">{{ watchlist().length }}</span> }
     </button>
 
     @if (hasActiveFilters()) {
@@ -56,21 +82,20 @@
     }
   </div>
 
+  <!-- ── Sector pills ── -->
   @if (!isLoading() && sectors().length > 0) {
     <div class="sector-pills">
       @for (sector of sectors(); track sector) {
-        <button
-          type="button"
-          class="sector-pill"
+        <button type="button" class="sector-pill"
           [class.active]="selectedSector() === sector"
-          (click)="toggleSector(sector)"
-        >
+          (click)="toggleSector(sector)">
           {{ sector }}
         </button>
       }
     </div>
   }
 
+  <!-- ── Loading ── -->
   @if (isLoading()) {
     <div class="loading-state">
       <div class="spinner"></div>
@@ -78,6 +103,7 @@
     </div>
   }
 
+  <!-- ── Error ── -->
   @if (error()) {
     <div class="error-state">
       <span class="error-icon">⚠</span>
@@ -86,30 +112,38 @@
     </div>
   }
 
+  <!-- ── Empty ── -->
   @if (!isLoading() && !error() && displayedCompanies().length === 0) {
     <div class="empty-state">
-      <p>No companies match your filters.</p>
-      @if (hasActiveFilters() || showWatchlistOnly()) {
-        <button class="reset-btn" type="button" (click)="clearFilters(); showWatchlistOnly.set(false)">Clear filters</button>
+      @if (showWatchlistOnly()) {
+        <p>Your watchlist is empty. Bookmark companies to add them here.</p>
+        <button class="reset-btn" type="button" (click)="toggleWatchlistFilter()">Show all companies</button>
+      } @else {
+        <p>No companies match your filters.</p>
+        @if (hasActiveFilters()) {
+          <button class="reset-btn" type="button" (click)="clearFilters()">Clear filters</button>
+        }
       }
     </div>
   }
 
+  <!-- ── Grid ── -->
   @if (!isLoading() && !error() && displayedCompanies().length > 0) {
     <div class="results-shell" [class.page-loading]="isPageLoading()">
       @if (isPageLoading()) {
         <div class="page-loading-bar" aria-hidden="true"></div>
       }
-
       <div class="companies-grid" [attr.aria-busy]="isPageLoading()">
         @for (company of displayedCompanies(); track company.id) {
           <div class="card-wrapper">
-            <app-company-card
-              [company]="company"
-              (cardClick)="onCompanyClick($event)"
-            />
-            <button class="card-watch-btn" [class.watched]="isWatched(company.id)" (click)="toggleWatchlist(company.id)" [title]="isWatched(company.id) ? 'Remove from Watchlist' : 'Add to Watchlist'">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="bookmark-icon">
+            <app-company-card [company]="company" (cardClick)="onCompanyClick($event)" />
+            <button class="card-watch-btn" type="button"
+              [class.watched]="isWatched(company.id)"
+              (click)="toggleWatchlist(company.id)"
+              [title]="isWatched(company.id) ? 'Remove from Watchlist' : 'Add to Watchlist'">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                class="bookmark-icon">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
               </svg>
             </button>
@@ -119,37 +153,23 @@
     </div>
   }
 
-  @if (!isLoading() && !error() && totalPages() > 1) {
+  <!-- ── Pagination (hidden when watchlist view is active) ── -->
+  @if (!isLoading() && !error() && totalPages() > 1 && !showWatchlistOnly()) {
     <div class="pagination">
-      <button
-        class="page-btn"
-        type="button"
-        [disabled]="page() === 0 || isPageLoading()"
-        (click)="prevPage()"
-      >
-        ‹
-      </button>
+      <button class="page-btn" type="button"
+        [disabled]="page() === 0 || isPageLoading()" (click)="prevPage()">‹</button>
 
       @for (p of pages(); track p) {
-        <button
-          class="page-btn"
-          type="button"
+        <button class="page-btn" type="button"
           [class.active]="page() === p"
           [disabled]="isPageLoading() && page() !== p"
-          (click)="changePage(p)"
-        >
+          (click)="changePage(p)">
           {{ p + 1 }}
         </button>
       }
 
-      <button
-        class="page-btn"
-        type="button"
-        [disabled]="page() === totalPages() - 1 || isPageLoading()"
-        (click)="nextPage()"
-      >
-        ›
-      </button>
+      <button class="page-btn" type="button"
+        [disabled]="page() === totalPages() - 1 || isPageLoading()" (click)="nextPage()">›</button>
     </div>
   }
 </div>
